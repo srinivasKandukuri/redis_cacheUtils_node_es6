@@ -1,0 +1,26 @@
+{
+  "name": "redis_cache",
+  "version": "1.0.0",
+  "description": "verify with and without redis cache API response time",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "author": "srinivas kandukuri",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.6.1",
+    "axios": "^0.18.0",
+    "express": "^4.16.3",
+    "redis": "^2.8.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.4",
+    "babel-preset-env": "^1.7.0",
+    "webpack": "^2.2.1",
+    "webpack-node-externals": "^1.7.2"
+  }
+}
