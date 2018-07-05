@@ -15,6 +15,7 @@ module.exports = [
         },
         externals: [nodeExternals({modulesFromFile:true})],
         target: 'node',
+        watch: true,
         module: {
 			rules: [{
 				test: /\.js$/,

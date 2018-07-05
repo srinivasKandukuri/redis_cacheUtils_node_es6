@@ -1,7 +1,8 @@
 import express from "express";
-import async from 'async';
+import async, { reject } from 'async';
 import redis from 'redis';
-const { promisify } = require('util');
+import { promisify } from 'util';
+import request from 'request';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,11 +34,12 @@ class CacheUtils {
     async setCache(key, value, ttlSec) {
         try {
             let client = await this.getClient();
-            let setAsync = promisify(client.set).bind(client);
+            let setAsync = promisify(client.setex).bind(client);
             if (typeof value === 'object') {
                 value = JSON.stringify(value);
             }
-            const res = await setAsync(key, ttlSec, value);
+            let res = await setAsync(key, ttlSec, value);
+            console.log(res);
         } catch (err) {
             console.error(`Failed to set cache: ${err.message}`);
             throw err;
@@ -45,26 +47,66 @@ class CacheUtils {
     }
 
     async delCache(key) {
-        let client = await this.getClient();
-        let delAsync = promisify(client.del).bind(client);
-        let del = await delAsync(key);
+        try {
+            let client = await this.getClient();
+            let delAsync = promisify(client.del).bind(client);
+            let del = await delAsync(key);
+            console.log(del);
+        } catch (err) {
+            console.error(`Failed to delete cache: ${err.message}`);
+            throw err;
+        }
     }
 }
 
-app.get('/set', function (req, res) {
+app.get('/set', (req, res) => {
     const cache = new CacheUtils();
-    cache.setCache("skk", { "datasetttttttttttt": true });
+    cache.setCache("skk", { "datasetttttttttttt": true }, 1000);
     res.send({
         success: true
     })
 });
 
-app.get('/get', async function (req, res) {
+app.get('/get', async (req, res) => {
     const cache = new CacheUtils();
     let data = await cache.getCache("skk");
     console.log(data);
     res.send(data)
 });
+
+app.get('/del', async (req, res) => {
+    const cache = new CacheUtils();
+    let data = await cache.delCache("skk");
+    console.log(data);
+    res.send(data)
+});
+
+
+async function getAPIData(url){
+    return new Promise((resolve, reject) => {
+        request(url, (error, response, data) =>{
+            if(error) reject(error)
+            else resolve(data)
+        })
+    })
+}
+
+
+app.get('/storeAPI', async (req, res) => {
+    let data = await getAPIData('http://datasource.kapsarc.org/api/datasets/1.0/search/?rows=1');
+    console.log(data);
+    const cache = new CacheUtils();
+    cache.setCache("API", data, 1000);
+    res.send(data);
+})
+
+
+app.get('/getCacheAPI', async (req, res) => {
+    const cache = new CacheUtils();
+    let response =  await cache.getCache("API");
+    console.log(response);
+    res.send(response)
+})
 
 
 app.listen(PORT, function () {
