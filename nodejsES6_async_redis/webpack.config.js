@@ -7,26 +7,32 @@ require("babel-polyfill");
 module.exports = [
     {
         context: __dirname,
-        
-            entry: ["babel-polyfill", "./src/server.js"],
-        output: {
-			path: path.resolve(__dirname, 'dist'),
-			filename: 'server-bundle.js'
+
+        entry: {
+            server: [
+                "babel-polyfill",
+                "./src/server.js",
+                "./src/utils/cacheUtils.js"
+            ]
         },
-        externals: [nodeExternals({modulesFromFile:true})],
+        output: {
+            path: path.resolve(__dirname, 'dist'),
+            filename: 'server-bundle.js'
+        },
+        externals: [nodeExternals({ modulesFromFile: true })],
         target: 'node',
         watch: true,
         module: {
-			rules: [{
-				test: /\.js$/,
-				exclude: ['node_modules', 'dist'],
-				use: {
-                    loader:'babel-loader',
+            rules: [{
+                test: /\.js$/,
+                exclude: ['node_modules', 'dist'],
+                use: {
+                    loader: 'babel-loader',
                     options: {
                         presets: ["env"]
                     }
                 }
-			}]
-		},
+            }]
+        },
     },
 ];
