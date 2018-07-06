@@ -6,11 +6,13 @@ import request from 'request';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ONE_HOUR_IN_SECONDS_TTL_DEFAULT = 1000 * 60 * 60;
 
 class CacheUtils {
     constructor() {
         let client = null;
     }
+    
     async getClient() {
         //const port = process.env.REDIS_PORT;
         //const url = process.env.REDISCLOUD_URL || "redis://127.0.0.1:6378";
@@ -19,26 +21,39 @@ class CacheUtils {
         }
         return this.client;
     }
-    async getCache(key) {
+
+    
+    /**
+     * Get an item from the redis store
+     * @param {String} cacheKey 
+     */
+    async getCache(cacheKey) {
         try {
             let client = await this.getClient();
             let getAsync = promisify(client.get).bind(client);
-            const res = await getAsync(key);
-            return JSON.parse(res);
+            const res = await getAsync(cacheKey);
+            return res;
         } catch (err) {
             console.error(`Failed to retrieve results: ${err.message}`);
             throw err;
         }
 
     }
-    async setCache(key, value, ttlSec) {
+
+    /**
+     * Set an item to the redis store
+     * @param {String} cacheKey 
+     * @param {Object} data  JSON.stringify-able object
+     * @param {Number} cacheExpire  TTL in seconds
+     */
+    async setCache(cacheKey, data, cacheExpire) {
         try {
             let client = await this.getClient();
             let setAsync = promisify(client.setex).bind(client);
-            if (typeof value === 'object') {
-                value = JSON.stringify(value);
+            if (typeof data === 'object') {
+                value = JSON.stringify(data);
             }
-            let res = await setAsync(key, ttlSec, value);
+            let res = await setAsync(cacheKey, (cacheExpire || ONE_HOUR_IN_SECONDS_TTL_DEFAULT), data);
             console.log(res);
         } catch (err) {
             console.error(`Failed to set cache: ${err.message}`);
@@ -46,11 +61,16 @@ class CacheUtils {
         }
     }
 
-    async delCache(key) {
+
+    /**
+     * Delete cache based on Key
+     * @param {String} cacheKey 
+     */
+    async delCache(cacheKey) {
         try {
             let client = await this.getClient();
             let delAsync = promisify(client.del).bind(client);
-            let del = await delAsync(key);
+            let del = await delAsync(cacheKey);
             console.log(del);
         } catch (err) {
             console.error(`Failed to delete cache: ${err.message}`);
@@ -70,7 +90,7 @@ app.get('/set', (req, res) => {
 app.get('/get', async (req, res) => {
     const cache = new CacheUtils();
     let data = await cache.getCache("skk");
-    console.log(data);
+    data = JSON.parse(data);
     res.send(data)
 });
 
