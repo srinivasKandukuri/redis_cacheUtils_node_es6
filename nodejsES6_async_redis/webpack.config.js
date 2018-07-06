@@ -1,11 +1,12 @@
-var path = require('path');
-var nodeExternals = require('webpack-node-externals');
-var webpack = require('webpack');
-require("babel-polyfill");
+const path = require('path');
+const nodeExternals = require('webpack-node-externals');
+const webpack = require('webpack');
+const babelpolyfill = require("babel-polyfill");
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
-
-module.exports = [
-    {
+module.exports = env => {
+    const PROD = env.NODE_ENV; // set env
+    return {
         context: __dirname,
 
         entry: {
@@ -17,7 +18,7 @@ module.exports = [
         },
         output: {
             path: path.resolve(__dirname, 'dist'),
-            filename: 'server-bundle.js'
+            filename: PROD ? 'server-bundle.min.js' : 'server-bundle.js'    
         },
         externals: [nodeExternals({ modulesFromFile: true })],
         target: 'node',
@@ -34,5 +35,16 @@ module.exports = [
                 }
             }]
         },
-    },
-];
+        plugins: [
+            new webpack.optimize.UglifyJsPlugin({
+                compress: {
+                    warnings: false
+                },
+                output: {
+                    comments: false,
+                },
+            })
+        ]
+    }
+
+}
